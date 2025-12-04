@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LXTOZA | PORTFOLIO V3.0</title>
+    <!-- Шрифты: JetBrains Mono (код, текст), Syne (заголовки) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+    <!-- Иконки Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- ЦВЕТОВАЯ СХЕМА (CYBERPUNK TERMINAL) --- */
+        :root {
+            --bg: #050505; /* Почти черный фон */
+            --card-bg: #0f0f0f; /* Фон карточек */
+            --text: #ffffff; /* Белый текст */
+            --accent-primary: #8a2be2; /* Фиолетовый (Основной акцент) */
+            --accent-secondary: #ccff00; /* Ярко-желтый/Салатовый (Второй акцент) */
+            --border: #2a2a2a; /* Темный серый для границ */
+        }
+
+        /* Обнуление и установка кастомного курсора */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; 
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden; /* Предотвращаем горизонтальный скролл */
+            min-height: 100vh;
+        }
+
+        /* --- PRELOADER --- */
+        .preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+            transition: transform 0.8s cubic-bezier(0.86, 0, 0.07, 1); /* Плавное исчезание */
+        }
+        .loader-text {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: var(--accent-secondary);
+        }
+        .progress-bar {
+            width: 200px; height: 2px; background: #333; margin-top: 20px;
+            position: relative; overflow: hidden;
+        }
+        .progress-fill {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: var(--accent-secondary); width: 0%;
+            animation: load 2s ease forwards;
+        }
+        .preloader.hide {
+            transform: translateY(-100%);
+        }
+        @keyframes load {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor {
+            width: 20px; height: 20px;
+            border: 2px solid var(--accent-secondary);
+            position: fixed; border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.2s;
+            mix-blend-mode: difference;
+        }
+        .cursor.active {
+            width: 60px; height: 60px;
+            background: var(--accent-secondary);
+            opacity: 0.8; border: none;
+            mix-blend-mode: normal;
+        }
+        .cursor.active::after {
+            content: 'VIEW';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: black; font-size: 10px; font-weight: bold;
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* --- LAYOUT & HEADER --- */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            padding: 2rem 0;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            opacity: 0; 
+            transform: translateY(-20px);
+            animation: slideDown 1s ease 2.2s forwards;
+        }
+
+        @keyframes slideDown { to { opacity: 1; transform: translateY(0); } }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800; font-size: 2rem;
+            text-transform: uppercase; letter-spacing: -1px;
+        }
+        .logo span { color: var(--accent-primary); }
+
+        /* --- HERO --- */
+        .hero {
+            height: 75vh; /* ВОССТАНОВЛЕННАЯ БОЛЬШАЯ ВЫСОТА */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 11vw, 9rem);
+            line-height: 0.9;
+            font-weight: 800;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeIn 1s ease 2.5s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Эффект контура для текста */
+        .outline {
+            -webkit-text-stroke: 2px var(--text);
+            color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+        .outline::before {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            color: var(--accent-secondary);
+            -webkit-text-stroke: 0px;
+            opacity: 0;
+            transform: translate(-5px, -5px);
+            transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .outline:hover::before {
+            opacity: 1;
+            transform: translate(0,0);
+        }
+        
+        /* --- MARQUEE (БЕГУЩАЯ СТРОКА) --- */
+        .marquee-container {
+            width: 100vw;
+            background: var(--accent-primary);
+            color: white;
+            padding: 1rem 0;
+            margin-left: -50vw;
+            left: 50%;
+            position: relative;
+            transform: rotate(-2deg) scale(1.1); /* Наклон для стиля */
+            margin-bottom: 5rem;
+            overflow: hidden;
+            border-top: 1px solid white;
+            border-bottom: 1px solid white;
+        }
+        .marquee-content {
+            display: flex;
+            animation: scrolling 20s linear infinite;
+            white-space: nowrap;
+        }
+        .marquee-item {
+            font-family: 'Syne';
+            font-weight: 800; font-size: 2rem;
+            padding: 0 2rem;
+            text-transform: uppercase;
+        }
+        @keyframes scrolling {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- ABOUT SECTION --- */
+        .about-section {
+             margin: 8rem 0 10rem 0;
+        }
+        .about-section h2 {
+            font-family: 'Syne'; font-size: 2.5rem; text-transform: uppercase;
+            border-bottom: 2px solid var(--accent-secondary); padding-bottom: 0.5rem;
+            margin-bottom: 2rem; color: var(--accent-secondary);
+        }
+        .about-section p {
+            font-size: 1rem; line-height: 1.8; max-width: 900px; color: #aaa;
+        }
+
+
+        /* --- FOLDER TABS & FILTERS --- */
+        .folder-system { margin-bottom: 10rem; }
+        
+        .folder-tabs {
+            display: flex; gap: 1rem; margin-bottom: 2rem;
+            flex-wrap: wrap; /* Адаптивность для мобильных */
+        }
+        .tab-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: #666; padding: 1rem 2rem;
+            font-family: 'Syne', sans-serif; font-weight: 700;
+            font-size: 1.5rem; text-transform: uppercase;
+            transition: 0.3s; position: relative;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .tab-btn:focus { outline: none; border-color: var(--accent-secondary); } /* Фокус */
+
+        .tab-btn::before {
+            content: ''; position: absolute;
+            top:0; left:0; width: 0%; height: 100%;
+            background: var(--accent-primary);
+            z-index: -1; transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .tab-btn:hover::before, .tab-btn.active::before { width: 100%; }
+        .tab-btn:hover, .tab-btn.active { color: white; border-color: var(--accent-primary); z-index: 1; }
+
+        .sub-filters {
+            display: flex; gap: 10px; margin-bottom: 3rem;
+            overflow-x: auto; padding-bottom: 10px;
+        }
+        .filter-chip {
+            padding: 8px 20px;
+            border: 1px solid var(--border); border-radius: 50px;
+            font-size: 0.8rem; transition: 0.3s;
+            background: transparent; color: #888;
+            flex-shrink: 0; /* Не сжимать на маленьких экранах */
+        }
+        .filter-chip:hover, .filter-chip.active {
+            border-color: var(--accent-secondary);
+            color: var(--accent-secondary);
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.2);
+        }
+
+        /* --- GRID & 3D CARDS --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Уменьшил minmax для лучшей мобильной адаптации */
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            aspect-ratio: 16/9;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            display: none; 
+            overflow: hidden; /* Важно для 3D Tilt */
+        }
+        .card.show {
+            display: block;
+            /* Анимация появления в стиле глитча */
+            animation: glitchReveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes glitchReveal {
+            0% { transform: translate(-10px, 10px) skew(10deg); opacity: 0; }
+            50% { opacity: 0.7; }
+            100% { transform: translate(0) skew(0); opacity: 1; }
+        }
+
+        .card-inner {
+            width: 100%; height: 100%;
+            position: relative;
+        }
+        .card-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease-in-out;
+        }
+        .card:hover .card-img { 
+            transform: scale(1.1); 
+            opacity: 0.7; /* Затемнение при наведении */
+        }
+
+        .card-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            opacity: 0; transition: 0.3s;
+            transform: translateZ(20px); 
+        }
+        .card:hover .card-overlay { opacity: 1; }
+        
+        .card-title {
+            font-family: 'Syne', sans-serif; font-size: 1.5rem;
+            font-weight: 800; color: white; text-transform: uppercase;
+        }
+        .card-cat { color: var(--accent-secondary); font-size: 0.8rem; letter-spacing: 2px; }
+
+        /* --- FOOTER --- */
+        footer { margin-top: 5rem; padding-bottom: 3rem; }
+        footer h2 {
+            font-family: 'Syne'; font-size: 2rem; border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem; margin-bottom: 2rem;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .social-item {
+            padding: 2rem; border: 1px solid var(--border);
+            transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; gap: 1rem;
+            color: var(--text); text-decoration: none;
+        }
+        .social-item:hover {
+            background: var(--accent-primary); border-color: var(--accent-primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.2);
+            color: var(--bg);
+        }
+        .social-item i { 
+            font-size: 2rem; 
+            color: var(--accent-secondary);
+            transition: 0.3s;
+        }
+        .social-item:hover i { 
+            color: var(--bg);
+        }
+
+        /* --- MOBILE ADAPTATIONS --- */
+        @media(max-width: 768px) {
+            .hero { height: 60vh; }
+            .hero-title { font-size: 3.5rem; }
+            
+            .marquee-container { 
+                transform: rotate(0) scale(1); /* Убираем наклон */
+                margin-left: 0; 
+                left: 0;
+                width: 100%; 
+            }
+            .marquee-item { font-size: 1.5rem; }
+            
+            .cursor { display: none; } /* Скрываем кастомный курсор на мобильных */
+
+            .tab-btn { padding: 0.8rem 1.5rem; font-size: 1.2rem; }
+            .about-section { margin: 5rem 0 7rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. PRELOADER (Эффект загрузки системы) -->
+    <div class="preloader">
+        <div class="loader-text">INITIALIZING SYSTEM...</div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+
+    <!-- 2. CUSTOM CURSOR (Скрывается на мобильных) -->
+    <div class="cursor"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div class="logo">LXTOZA<span>.</span></div>
+            <div style="font-size: 0.8rem; color: #555;">// PORTFOLIO V.3.0</div>
+        </header>
+
+        <!-- HERO SECTION (Большое пространство для сильного первого впечатления) -->
+        <section class="hero">
+            <div class="hero-title">
+                DIGITAL <br>
+                <span class="outline" data-text="DESIGNER">DESIGNER</span> <br>
+                <span style="color: var(--accent-secondary)">& EDITOR</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- 3. MARQUEE (БЕГУЩАЯ ЛЕНТА) -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <div class="marquee-item">Motion Graphics •</div>
+            <div class="marquee-item">Video Editing •</div>
+            <div class="marquee-item">UI/UX Design •</div>
+            <div class="marquee-item">Content Creation •</div>
+            <div class="marquee-item">Visual Arts •</div>
+            <!-- Дубликат для бесконечного скролла -->
+            <div class="marquee-item">Motion Graphics •</div>
+            <div class="marquee-item">Video Editing •</div>
+            <div class="marquee-item">UI/UX Design •</div>
+            <div class="marquee-item">Content Creation •</div>
+            <div class="marquee-item">Visual Arts •</div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <!-- СЕКЦИЯ: ОБО МНЕ -->
+        <section class="about-section">
+            <h2>/ABOUT_ME</h2>
+            <p>
+                Digital artist specializing in high-impact visuals and dynamic content creation for YouTube and social media platforms. Over [X] years of experience transforming raw footage and concepts into polished, trend-setting deliverables. Proficient in motion graphics, avatar design, and viral short-form video production.
+            </p>
+            <p style="margin-top: 1rem;">
+                My goal is to blend technical precision with youth culture aesthetics, delivering a style that is both clean and aggressively modern. Let's create something that breaks the algorithm.
+            </p>
+        </section>
+
+        <!-- СИСТЕМА ПАПОК / ПОРТФОЛИО -->
+        <section class="folder-system" id="portfolio">
+            <div class="folder-tabs">
+                <button class="tab-btn active" onclick="switchFolder('design')">
+                    <i class="fas fa-palette"></i> DESIGN
+                </button>
+                <button class="tab-btn" onclick="switchFolder('montage')">
+                    <i class="fas fa-film"></i> МОНТАЖ
+                </button>
+            </div>
+
+            <!-- SUB FILTERS: DESIGN -->
+            <div class="sub-filters" id="design-filters">
+                <button class="filter-chip active" onclick="filterGrid('all')">ALL</button>
+                <button class="filter-chip" onclick="filterGrid('youtube')">YOUTUBE</button>
+                <button class="filter-chip" onclick="filterGrid('avatars')">AVATARS</button>
+                <button class="filter-chip" onclick="filterGrid('thumbnails')">THUMBNAILS</button>
+            </div>
+
+            <!-- SUB FILTERS: MONTAGE (Изначально скрыт) -->
+            <div class="sub-filters" id="montage-filters" style="display: none;">
+                <button class="filter-chip active" onclick="filterGrid('all')">ALL</button>
+                <button class="filter-chip" onclick="filterGrid('edits')">EDITS</button>
+                <button class="filter-chip" onclick="filterGrid('motion')">MOTION</button>
+                <button class="filter-chip" onclick="filterGrid('reels')">REELS</button>
+            </div>
+
+            <!-- GRID WITH 3D TILT CARDS -->
+            <div class="grid">
+                
+                <!-- DESIGN: THUMBNAIL 1 -->
+                <div class="card show design thumbnails" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/ccff00?text=THUMBNAIL+01" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">THUMBNAIL</span>
+                            <div class="card-title">MINECRAFT WAR</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESIGN: AVATAR 1 -->
+                <div class="card show design avatars" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/8a2be2?text=AVATAR+01" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">AVATAR</span>
+                            <div class="card-title">3D PROFILE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESIGN: YOUTUBE 1 -->
+                <div class="card show design youtube" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/ffffff?text=YOUTUBE+BANNER+01" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">BANNER</span>
+                            <div class="card-title">NEON VIBE</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DESIGN: YOUTUBE 2 -->
+                <div class="card show design youtube" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/ccff00?text=TECH+GRAPHIC" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">YOUTUBE</span>
+                            <div class="card-title">CLEAN TECH LOGO</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DESIGN: THUMBNAIL 2 -->
+                <div class="card show design thumbnails" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/8a2be2?text=THUMBNAIL+02" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">THUMBNAIL</span>
+                            <div class="card-title">TUTORIAL GUIDE</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MONTAGE: EDIT 1 -->
+                <div class="card montage edits" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/ffffff?text=ANIME+EDIT+01" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">EDIT</span>
+                            <div class="card-title">ANIME MIX</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MONTAGE: REELS 1 -->
+                <div class="card montage reels" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/900x1600/0f0f0f/ccff00?text=REEL+1" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">REELS</span>
+                            <div class="card-title">DANCE TREND</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MONTAGE: MOTION 1 -->
+                <div class="card montage motion" data-tilt data-tilt-max="15" data-tilt-speed="400">
+                    <div class="card-inner">
+                        <img src="https://placehold.co/1600x900/0f0f0f/8a2be2?text=MOTION+GRAPHICS+01" class="card-img" alt="Work">
+                        <div class="card-overlay">
+                            <span class="card-cat">MOTION</span>
+                            <div class="card-title">GLITCH INTRO</div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <h2>CONNECT_</h2>
+            <div class="social-grid">
+                <a href="https://discord.com" target="_blank" class="social-item">
+                    <i class="fab fa-discord"></i>
+                    <span>@lxtoza</span>
+                </a>
+                <a href="https://youtube.com/@itz_laktoza" target="_blank" class="social-item">
+                    <i class="fab fa-youtube"></i>
+                    <span>itz_laktoza</span>
+                </a>
+                <a href="https://t.me/lxtoza" target="_blank" class="social-item">
+                    <i class="fab fa-telegram"></i>
+                    <span>@lxtoza</span>
+                </a>
+                <a href="https://tiktok.com/@itzlaktoza" target="_blank" class="social-item">
+                    <i class="fab fa-tiktok"></i>
+                    <span>itzlaktoza</span>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script для 3D эффекта карточек (Vanilla Tilt) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
+    <script>
+        // --- 1. PRELOADER LOGIC ---
+        window.addEventListener('load', () => {
+            const preloader = document.querySelector('.preloader');
+            const text = document.querySelector('.loader-text');
+            
+            // Имитация загрузки
+            setTimeout(() => {
+                text.innerText = "ACCESS GRANTED";
+                text.style.color = "var(--accent-primary)";
+            }, 1500);
+
+            setTimeout(() => {
+                preloader.classList.add('hide');
+                document.body.style.overflow = 'auto'; // Включаем скролл после загрузки
+            }, 2200);
+        });
+
+        // --- 2. CURSOR LOGIC ---
+        const cursor = document.querySelector('.cursor');
+        
+        // Скрываем кастомный курсор на мобильных устройствах
+        if (window.innerWidth > 768) {
+             document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+
+            document.querySelectorAll('a, button, .card').forEach(item => {
+                item.addEventListener('mouseenter', () => cursor.classList.add('active'));
+                item.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+            });
+        }
+       
+        // --- 3. FILTERING LOGIC ---
+        let currentFolder = 'design';
+
+        /** Переключает основные вкладки (DESIGN/МОНТАЖ) */
+        function switchFolder(folderName) {
+            // event.currentTarget - это кнопка, которую мы нажали
+            const newActiveBtn = event.currentTarget;
+            
+            // 1. Обновляем активную вкладку
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            newActiveBtn.classList.add('active');
+
+            // 2. Показываем/скрываем соответствующие подфильтры
+            const designFilters = document.getElementById('design-filters');
+            const montageFilters = document.getElementById('montage-filters');
+
+            designFilters.style.display = 'none';
+            montageFilters.style.display = 'none';
+            
+            if (folderName === 'design') {
+                designFilters.style.display = 'flex';
+                currentFolder = 'design';
+            } else if (folderName === 'montage') {
+                montageFilters.style.display = 'flex';
+                currentFolder = 'montage';
+            }
+
+            // 3. Выбираем 'ALL' в новых подфильтрах и обновляем сетку
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            const defaultFilterChip = document.querySelector(`#${currentFolder}-filters .filter-chip:first-child`);
+            if (defaultFilterChip) {
+                defaultFilterChip.classList.add('active');
+            }
+
+            updateGrid(currentFolder, 'all');
+        }
+
+        /** Переключает подфильтры (YOUTUBE/AVATARS и т.д.) */
+        function filterGrid(subCategory) {
+            const activeFilterBarId = currentFolder === 'design' ? 'design-filters' : 'montage-filters';
+            const activeFilterBar = document.getElementById(activeFilterBarId);
+            
+            // 1. Обновляем активный чип
+            activeFilterBar.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 2. Обновляем сетку
+            updateGrid(currentFolder, subCategory);
+        }
+
+        /** Обновляет отображение карточек на основе текущей папки и подкатегории */
+        function updateGrid(folder, sub) {
+            const items = document.querySelectorAll('.card');
+            
+            items.forEach(item => {
+                // Сначала убираем, чтобы сбросить CSS-анимацию
+                item.classList.remove('show'); 
+                
+                const isCorrectFolder = item.classList.contains(folder);
+                const isCorrectSub = sub === 'all' || item.classList.contains(sub);
+
+                if (isCorrectFolder && isCorrectSub) {
+                    // Небольшая задержка, чтобы браузер успел сбросить анимацию
+                    setTimeout(() => {
+                        item.classList.add('show');
+                    }, 50);
+                }
+            });
+        }
+        
+        // Инициализация при загрузке: убеждаемся, что показаны только DESIGN/ALL
+        document.addEventListener('DOMContentLoaded', () => {
+             updateGrid('design', 'all');
+        });
+        
+    </script>
+</body>
+</html>
